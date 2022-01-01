@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println(1);
-        List a = new ArrayList<>();
+        List<Integer> a = new CustomArrayList<>();
+        System.out.println(a.size());
     }
 }
