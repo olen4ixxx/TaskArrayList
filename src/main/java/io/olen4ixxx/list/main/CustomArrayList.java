@@ -4,11 +4,19 @@ import io.olen4ixxx.list.exception.CustomException;
 
 import java.util.*;
 
+/**
+ * CustomArrayList is the custom implementation of List interface.
+ *
+ * Please see the olen4ixxx.github.io class for true identity
+ * @author Leanid Nasanovich
+ *
+ */
 public class CustomArrayList<E> extends AbstractList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
     private Object[] array;
     private static final int DEFAULT_CAPACITY = 10;
     private static final Object[] EMPTY_ARRAY = {};
+    private int size = 0;
 
     public CustomArrayList() {
         array = new Object[DEFAULT_CAPACITY];
@@ -19,13 +27,21 @@ public class CustomArrayList<E> extends AbstractList<E>
         array = new Object[capacity];
     }
 
+    /**
+     * Returns the number of elements in this list.
+     *
+     * @return the number of elements in this list
+     */
     @Override
     public int size() {
-        long size = Arrays.stream(array).filter(e->e!=null).count();
-        if (size > Integer.MAX_VALUE) return Integer.MAX_VALUE;
-        return (int) Arrays.stream(array).filter(e->e!=null).count();
+        return size;
     }
 
+    /**
+     * Returns {@code true} if this list contains no elements.
+     *
+     * @return {@code true} if this list contains no elements
+     */
     @Override
     public boolean isEmpty() {
         return size() == 0;
@@ -72,13 +88,23 @@ public class CustomArrayList<E> extends AbstractList<E>
 
     @Override
     public boolean add(E e) {
-
-        array[size()] = e;
+        if (size == array.length) array = grow();
+        array[size] = e;
+        size = size + 1;
         return true;
     }
 
     @Override
     public boolean remove(Object o) {
+        int k = 0;
+        while (k < array.length) {
+            if (array[k].equals(o)) {
+                array = decrease(k);
+                return true;
+            }
+            k++;
+        }
+        size = size - 1;
         return false;
     }
 
@@ -99,7 +125,19 @@ public class CustomArrayList<E> extends AbstractList<E>
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return false;
+        boolean result = false;
+        for (Object o : c) {
+            int k = 0;
+            while (k < array.length) {
+                if (array[k].equals(o)) {
+                    array = decrease(k);
+                    result = true;
+                }
+                k++;
+            }
+            size = size - 1;
+        }
+        return result;
     }
 
     @Override
@@ -114,22 +152,29 @@ public class CustomArrayList<E> extends AbstractList<E>
 
     @Override
     public E get(int index) {
-        return null;
+        return (E) array[index];
     }
 
     @Override
-    public E set(int index, E element) {
-        return null;
+    public E set(int index, E e) {
+        var oldElement = (E) array[index];
+        array[index] = e;
+        return oldElement;
     }
 
     @Override
-    public void add(int index, E element) {
-
+    public void add(int index, E e) {
+        array = growInsert(index);
+        array[index] = e;
+        size = size + 1;
     }
 
     @Override
     public E remove(int index) {
-        return null;
+        var oldElement = (E) array[index];
+        array = decrease(index);
+        size = size - 1;
+        return oldElement;
     }
 
     @Override
@@ -184,5 +229,43 @@ public class CustomArrayList<E> extends AbstractList<E>
         return result;
     }
 
-    private void grow(){}
+    private void rangeCheckForAdd(int index) throws CustomException {
+        if (index < 0 || index > array.length)
+            throw new CustomException("IndexOutOfBounds: " + index);
+    }
+
+    private Object[] grow() {
+        int oldCapacity = array.length;
+        var newArray = new Object[oldCapacity + oldCapacity / 2 + 1];
+        for (int i = 0; i < array.length; i++) {
+            newArray[i] = array[i];
+        }
+        return newArray;
+    }
+
+    private Object[] growInsert(int index) {
+        int oldCapacity = array.length;
+        int newCapacity = oldCapacity + 1;
+        var newArray = new Object[newCapacity];
+        for (int i = 0; i < index; i++) {
+            newArray[i] = array[i];
+        }
+        for (int i = index; i < newCapacity; i++) {
+            newArray[i+1] = array[i];
+        }
+        return newArray;
+    }
+
+    private Object[] decrease(int index) {
+        int oldCapacity = array.length;
+        int newCapacity = oldCapacity - 1;
+        var newArray = new Object[newCapacity];
+        for (int i = 0; i < index; i++) {
+            newArray[i] = array[i];
+        }
+        for (int i = index; i < newCapacity; i++) {
+            newArray[i] = array[i+1];
+        }
+        return newArray;
+    }
 }
